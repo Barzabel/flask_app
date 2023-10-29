@@ -16,4 +16,8 @@ def users_get():
 
 @app.post('/users')
 def users_post():
-    return 'POST /users'
+    return 'Users', 302
+
+@app.get('/courses/<id>')
+def courses(id):
+    return 'Course id: {}'.format(id)
