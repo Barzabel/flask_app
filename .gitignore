@@ -8,6 +8,7 @@ dist/*
 .venv/
 .coverage
 coverage.xml
+fake_base.json
 .pytest_cache/
 .vim
 .idea/

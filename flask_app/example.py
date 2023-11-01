@@ -1,11 +1,21 @@
 from flask import Flask
 from flask import request
-from flask import render_template
-
+from flask import render_template, redirect
+import json
 
 app = Flask(__name__)
 
-users = ['mike', 'mishel', 'adel', 'keks', 'kamila', 'Andrey']
+
+def get_base():
+    with open('fake_base.json', "r") as data:
+        return json.load(data)
+
+
+def write_base(user):
+    data = get_base()
+    with open('fake_base.json', "w") as file:
+        data["base"].append(user)
+        json.dump(data, file)
 
 
 @app.route('/')
@@ -15,6 +25,7 @@ def index():
 
 @app.get('/users')
 def get_users():
+    users = get_base()['base']
     name = request.args.get('name')
     if name is None:
         name = ""
@@ -29,4 +40,6 @@ def get_user_by_id(id):
 
 @app.post('/users')
 def users_post():
-    return 'Users', 302
+    user = {'id': 1, 'first_name': 'vasa'}
+    write_base(user)
+    return redirect('Users', 302)
