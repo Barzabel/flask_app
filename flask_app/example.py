@@ -53,7 +53,7 @@ def get_users():
     return render_template('users/index.html', users=user, search=name)
 
 
-@app.get('/users/<id>')
+@app.get('/users/<int:id>')
 def get_user_by_id(id):
     users = get_base()['users']
     user = next(filter(lambda x: x['id'] == id, users), None)
