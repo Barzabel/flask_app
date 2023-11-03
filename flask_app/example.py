@@ -1,10 +1,11 @@
 from flask import Flask
-from flask import request
+from flask import request, flash, get_flashed_messages
 from flask import render_template, redirect, url_for
 import json
 import re
 
 app = Flask(__name__)
+app.secret_key = "secret_key"  # only debug!!
 
 
 def get_base():
@@ -23,6 +24,7 @@ def write_base(user):
         json.dump(data, file)
     return True
 
+
 def valide(user):
     errors = {}
     pattern = r"^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$"
@@ -38,6 +40,7 @@ def valide(user):
             errors['nickname'] = 'nickname is already used'
     return errors
 
+
 @app.route('/')
 def index():
     return 'hi'
@@ -50,7 +53,13 @@ def get_users():
     if name is None:
         name = ""
     user = list(filter(lambda x: name in x['nickname'], users))
-    return render_template('users/index.html', users=user, search=name)
+    messages = get_flashed_messages(with_categories=True)
+    return render_template(
+        'users/index.html',
+        users=user,
+        search=name,
+        messages=messages,
+    )
 
 
 @app.post('/users')
@@ -59,6 +68,7 @@ def creat_user():
     errors = valide(user)
     if errors == {}:
         write_base(user)
+        flash('User was added successfully', 'success')
         return redirect(url_for('get_users'))
     return render_template('users/users_form.html', user=user, errors=errors)
 
