@@ -53,6 +53,26 @@ def get_users():
     return render_template('users/index.html', users=user, search=name)
 
 
+@app.post('/users')
+def creat_user():
+    user = request.form.to_dict()
+    errors = valide(user)
+    if errors == {}:
+        write_base(user)
+        return redirect(url_for('get_users'))
+    return render_template('users/users_form.html', user=user, errors=errors)
+
+
+@app.get('/users/new')
+def user_form():
+    errors = {}
+    user = {
+        'nickname': '',
+        'email': ''
+    }
+    return render_template('users/users_form.html', user=user, errors=errors)
+
+
 @app.get('/users/<int:id>')
 def get_user_by_id(id):
     users = get_base()['users']
@@ -60,21 +80,3 @@ def get_user_by_id(id):
     if user is None:
         return 'Page not found', 404
     return render_template('users/show.html', user=user)
-
-
-@app.route('/users/new', methods=['GET', 'POST'])
-def users_form():
-    user = {
-        'nickname': '',
-        'email': ''
-    }
-    errors = {}
-    if request.method == 'GET':
-        return render_template('users/users_form.html', user=user, errors=errors)
-    elif request.method == 'POST':
-        user = request.form.to_dict()
-        errors = valide(user)
-        if errors == {}:
-            write_base(user)
-            return redirect(url_for('get_users'))
-        return render_template('users/users_form.html', user=user, errors=errors)
