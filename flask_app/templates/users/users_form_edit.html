@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New users</title>
+</head>
+<body>
+<form action="{{ url_for('patch_user', id=user.id) }}" method="post">
+  <div>
+    <label>
+      nickname
+      <input type="text" required name="nickname" value="{{ user.nickname }}">
+    </label>
+    {% if errors['nickname'] %}
+    <div>{{ errors['nickname'] }}</div>
+    {% endif %}
+  </div>
+  <div>
+    <label>
+      Email
+      <input type="email" required name="email" value="{{ user.email }}">
+    </label>
+    {% if errors['email'] %}
+      <div>{{ errors['email'] }}</div>
+    {% endif %}
+    </div>
+
+  <input type="submit" value="Sign Up">
+</form>
+</body>
+</html>
