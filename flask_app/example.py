@@ -28,7 +28,19 @@ def write_base(user):
 
 def patch_base(user):
     data = get_base()
-    data['users'][user['id']] = user
+    for x in range(len(data['users'])):
+        if data['users'][x]['id'] == user['id']:
+            data['users'][x] = user
+            break
+    with open('fake_base.json', "w") as file:
+        json.dump(data, file)
+    return True
+
+
+def delete_base(id):
+    data = get_base()
+    new_data = [x for x in data['users'] if x['id'] != id]
+    data['users'] = new_data
     with open('fake_base.json', "w") as file:
         json.dump(data, file)
     return True
@@ -58,6 +70,7 @@ def valide_patch(user):
     if user['nickname'].isdigit():
         errors['nickname'] = 'Invalid nickname'
     return errors
+
 
 @app.route('/')
 def index():
@@ -130,3 +143,10 @@ def patch_user(id):
         flash('User was patch successfully', 'success')
         return redirect(url_for('get_users'))
     return render_template('users/users_form_edit.html', user=user, errors=errors)
+
+
+@app.post('/users/<int:id>/delete')
+def delete_user(id):
+    delete_base(id)
+    flash('User was delete successfully', 'success')
+    return redirect(url_for('get_users'))
