@@ -1,68 +1,22 @@
 from flask import Flask
 from flask import request, flash, get_flashed_messages
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, make_response
 import json
 import re
 
 app = Flask(__name__)
 app.secret_key = "secret_key"  # only debug!!
 
+DATA_BASE = 'users'
 
-def get_base():
-    with open('fake_base.json', "r") as data:
-        return json.load(data)
-
-
-def write_base(user):
-    data = get_base()
-    if len(data['users']) == 0:
-        user['id'] = 0
+def get_id(users):
+    if len(users) == 0:
+        return 0
     else:
-        user['id'] = max(data['users'], key=lambda x: x['id'])['id'] + 1
-    data['users'].append(user)
-    with open('fake_base.json', "w") as file:
-
-        json.dump(data, file)
-    return True
-
-
-def patch_base(user):
-    data = get_base()
-    for x in range(len(data['users'])):
-        if data['users'][x]['id'] == user['id']:
-            data['users'][x] = user
-            break
-    with open('fake_base.json', "w") as file:
-        json.dump(data, file)
-    return True
-
-
-def delete_base(id):
-    data = get_base()
-    new_data = [x for x in data['users'] if x['id'] != id]
-    data['users'] = new_data
-    with open('fake_base.json', "w") as file:
-        json.dump(data, file)
-    return True
+        return max(users, key=lambda x: x['id'])['id'] + 1
 
 
 def valide(user):
-    errors = {}
-    pattern = r"^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$"
-    data = get_base()
-    if re.match(pattern, user['email']) is None:
-        errors['email'] = 'Invalid email'
-    if user['nickname'].isdigit():
-        errors['nickname'] = 'Invalid nickname'
-    for x in data['users']:
-        if x['email'] == user['email']:
-            errors['email'] = 'email is already used'
-        if x['nickname'] == user['nickname']:
-            errors['nickname'] = 'nickname is already used'
-    return errors
-
-
-def valide_patch(user):
     errors = {}
     pattern = r"^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$"
     if re.match(pattern, user['email']) is None:
@@ -74,12 +28,12 @@ def valide_patch(user):
 
 @app.route('/')
 def index():
-    return 'hi'
+    return render_template('index.html')
 
 
 @app.get('/users')
 def get_users():
-    users = get_base()['users']
+    users = json.loads(request.cookies.get(DATA_BASE,  json.dumps([])))
     name = request.args.get('name')
     if name is None:
         name = ""
@@ -98,9 +52,13 @@ def creat_user():
     user = request.form.to_dict()
     errors = valide(user)
     if errors == {}:
-        write_base(user)
+        users = json.loads(request.cookies.get(DATA_BASE,  json.dumps([])))
+        user['id'] = get_id(users)
+        users.append(user)
         flash('User was added successfully', 'success')
-        return redirect(url_for('get_users'))
+        response = make_response(redirect(url_for('get_users')))
+        response.set_cookie(DATA_BASE, json.dumps(users))
+        return response
     return render_template('users/users_form.html', user=user, errors=errors)
 
 
@@ -116,7 +74,7 @@ def user_form():
 
 @app.get('/users/<int:id>')
 def get_user_by_id(id):
-    users = get_base()['users']
+    users = json.loads(request.cookies.get(DATA_BASE, json.dumps([])))
     user = next(filter(lambda x: x['id'] == id, users), None)
     if user is None:
         return 'Page not found', 404
@@ -125,7 +83,7 @@ def get_user_by_id(id):
 
 @app.get('/users/<int:id>/edit')
 def get_form_edit(id):
-    users = get_base()['users']
+    users = json.loads(request.cookies.get(DATA_BASE, json.dumps([])))
     user = next(filter(lambda x: x['id'] == id, users), None)
     errors = {}
     if user is None:
@@ -137,16 +95,29 @@ def get_form_edit(id):
 def patch_user(id):
     user = request.form.to_dict()
     user['id'] = id
-    errors = valide_patch(user)
+    errors = valide(user)
     if errors == {}:
-        patch_base(user)
+        users = json.loads(request.cookies.get(DATA_BASE, json.dumps([])))
+        for index, old_user in enumerate(users):
+            if id == old_user['id']:
+                users[index] = user
+                break
+        else:
+            return 'Page not found', 404
+
         flash('User was patch successfully', 'success')
-        return redirect(url_for('get_users'))
+        response = make_response(redirect(url_for('get_users')))
+        response.set_cookie(DATA_BASE, json.dumps(users))
+        return response
     return render_template('users/users_form_edit.html', user=user, errors=errors)
 
 
 @app.post('/users/<int:id>/delete')
 def delete_user(id):
-    delete_base(id)
+    users = json.loads(request.cookies.get(DATA_BASE, json.dumps([])))
+    print(users)
+    new_users = [user for user in users if user['id'] != id]
     flash('User was delete successfully', 'success')
-    return redirect(url_for('get_users'))
+    response = make_response(redirect(url_for('get_users')))
+    response.set_cookie(DATA_BASE, json.dumps(new_users))
+    return response

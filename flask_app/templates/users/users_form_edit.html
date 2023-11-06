@@ -5,6 +5,7 @@
     <title>New users</title>
 </head>
 <body>
+{% include "users/panel.html"%}
 <form action="{{ url_for('patch_user', id=user.id) }}" method="post">
   <div>
     <label>
@@ -24,7 +25,6 @@
       <div>{{ errors['email'] }}</div>
     {% endif %}
     </div>
-
   <input type="submit" value="Sign Up">
 </form>
 </body>
