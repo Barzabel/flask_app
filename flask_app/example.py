@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask import request, flash, get_flashed_messages
 from flask import render_template, redirect, url_for, make_response
 import json
@@ -28,7 +28,8 @@ def valide(user):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    user = session.get('user', None)
+    return render_template('index.html', user=user)
 
 
 @app.get('/users')
@@ -121,3 +122,24 @@ def delete_user(id):
     response = make_response(redirect(url_for('get_users')))
     response.set_cookie(DATA_BASE, json.dumps(new_users))
     return response
+
+
+@app.post('/log_in')
+def log_in():
+    user = request.form.to_dict()
+    session['user'] = user
+    return redirect(url_for('index'))
+
+
+@app.get('/log_in')
+def form_log_in():
+    return render_template('users/log_in.html')
+
+
+
+
+
+@app.post('/log_out')
+def log_out():
+    session.clear()
+    return redirect(url_for('index'))
