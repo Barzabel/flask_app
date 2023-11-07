@@ -1,8 +1,10 @@
 {% if user %}
-{{ user.email }}
+<p> Hi ! {{ user.email }}</p>
+<a href="{{ url_for('get_users') }}">Users</a>
 <form action="{{ url_for('log_out') }}" method="post">
     <input type="submit" value="log out">
 </form>
+
 {% else %}
 <a href="{{ url_for('form_log_in') }}">Log in</a>
 {% endif %}
