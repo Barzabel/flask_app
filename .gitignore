@@ -12,3 +12,4 @@ fake_base.json
 .pytest_cache/
 .vim
 .idea/
+poetry.lock
