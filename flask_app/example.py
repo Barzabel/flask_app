@@ -3,9 +3,11 @@ from flask import request, flash, get_flashed_messages
 from flask import render_template, redirect, url_for, make_response
 import json
 import re
+import os
+
 
 app = Flask(__name__)
-app.secret_key = "secret_key"  # only debug!!
+app.secret_key = os.environ['SECRET_KEY'] # only debug!!
 
 DATA_BASE = 'users'
 
